@@ -6,5 +6,5 @@ install:
   - pip install requests pytest
 
 script:
-  - pytest -q
+  - pytest -q test_triangle.py
   - python -m unittest discover -s GitHubApi567-hw3a -p "test*.py"
