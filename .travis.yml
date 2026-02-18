@@ -1,0 +1,10 @@
+language: python
+python:
+  -"3.11"
+
+install:
+  - pip install requests pytest
+
+script:
+  - pytest -q
+  - python -m unittest discover -s GitHubApi567-hw3a -p "test*.py"
