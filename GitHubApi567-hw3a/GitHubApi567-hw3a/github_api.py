@@ -1,26 +1,27 @@
-import requests 
+import requests
 import json
 
 def get_repos_and_commits(user_id):
-  reppos_url = f"https://api.github.com/users/{user_id}/repos"
-  repos_response = requests.get(repos_url, timeout=10)
-  if repos_resposne.status_code != 200:
-    raise ValueError (f"Could fetch the repo for user '{user_id}'")
+    repos_url = f"https://api.github.com/users/{user_id}/repos"
+    repos_response = requests.get(repos_url, timeout=10)
 
-  repos = json.loads(repos_response.text)
-  results = []
-  for repo in repos:
-    repo_name = repo["name"]
-    commits_url = f"https://api.github.com/repos/{user_id}/{repo_name}/commits"
-    commits_response = requests.get(commits_url, timeout=10)
+    if repos_response.status_code != 200:
+        raise ValueError(f"Could not fetch the repos for user '{user_id}'")
 
-    if commits_respone.status.code != 200:
-      num_commits = 0
-    else:
-      commits = json.loads(commits_response.text)
-      num_commits = len(commits)
+    repos = json.loads(repos_response.text)
 
-    results.append((repo_name, num_commits))
+    results = []
+    for repo in repos:
+        repo_name = repo["name"]
+        commits_url = f"https://api.github.com/repos/{user_id}/{repo_name}/commits"
+        commits_response = requests.get(commits_url, timeout=10)
 
-return results
-  
+        if commits_response.status_code != 200:
+            num_commits = 0
+        else:
+            commits = json.loads(commits_response.text)
+            num_commits = len(commits)
+
+        results.append((repo_name, num_commits))
+
+    return results
