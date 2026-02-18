@@ -25,4 +25,4 @@ class TestTriangle(unittest.TestCase):
         self.assertEqual(classify_triangle(1, 2, 3), "NotATriangle")
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main() 
