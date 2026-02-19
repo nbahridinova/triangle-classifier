@@ -39,13 +39,18 @@ class TestGitHubAPI_WithMocks(unittest.TestCase):
 
 
         if results and isinstance(results[0], str):
-            self.assertIn("Repo: hellogitworld", results[0])
-            self.assertIn("Number of commits: 3", results[0])
+            joined = "\n".join(results)
+            self.assertIn("Repo: hellogitworld", joined)
+            self.assertIn("Number of commits: 3", joined)
+            self.assertIn("Repo: helloworld", joined)
+            self.assertIn("Number of commits: 1", joined)
         else:
             self.assertIn(("hellogitworld", 3), results)
             self.assertIn(("helloworld", 1), results)
 
         self.assertTrue(mock_get.called)
+        self.assertGreaterEqual(mock_get.call_count, 2)
+
 
     @patch("github_api.requests.get", side_effect=lambda url, timeout=15: _mock_response(404, {"message": "Not Found"}))
     def test_user_not_found_raises(self, mock_get):
