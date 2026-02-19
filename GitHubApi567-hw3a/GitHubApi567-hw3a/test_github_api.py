@@ -1,59 +1,43 @@
+import re
 import unittest
-from unittest.mock import Mock, patch
+import requests
+import json
 
-from github_api import get_repos_and_commits
-
-
-class TestGitHubAPI(unittest.TestCase):
-
-    @patch("github_api.requests.get")
-    def test_two_repos_counts_commits(self, mock_get):
-
-        repos_resp = Mock()
-        repos_resp.status_code = 200
-        repos_resp.text = '[{"name":"RepoA"},{"name":"RepoB"}]'
+from github_api import get_repo_commit_counts, GitHubAPIError
 
 
-        commits_a_resp = Mock()
-        commits_a_resp.status_code = 200
-        commits_a_resp.text = '[{"sha":"1"},{"sha":"2"},{"sha":"3"}]'
+class TestGitHubAPI_NoMocks(unittest.TestCase):
 
-
-        commits_b_resp = Mock()
-        commits_b_resp.status_code = 200
-        commits_b_resp.text = '[{"sha":"x"}]'
-
-        mock_get.side_effect = [repos_resp, commits_a_resp, commits_b_resp]
-
-        out = get_repos_and_commits("testuser")
-        self.assertEqual(out, [("RepoA", 3), ("RepoB", 1)])
-
-    @patch("github_api.requests.get")
-    def test_user_not_found_raises(self, mock_get):
-        repos_resp = Mock()
-        repos_resp.status_code = 404
-        repos_resp.text = '{"message":"Not Found"}'
-        mock_get.return_value = repos_resp
-
+    def test_blank_user_raises_value_error(self):
         with self.assertRaises(ValueError):
-            get_repos_and_commits("no_such_user")
+            get_repo_commit_counts("   ")
 
-    @patch("github_api.requests.get")
-    def test_repo_commits_endpoint_failure_returns_zero(self, mock_get):
-      
-        repos_resp = Mock()
-        repos_resp.status_code = 200
-        repos_resp.text = '[{"name":"RepoA"}]'
+    def test_invalid_user_raises_github_api_error(self):
+        with self.assertRaises(GitHubAPIError):
+            get_repo_commit_counts("this_user_should_not_exist_1234567890")
 
+    def test_real_user_output_format(self):
 
-        commits_resp = Mock()
-        commits_resp.status_code = 409
-        commits_resp.text = '{"message":"Git Repository is empty."}'
+        user = "richkempinski"
 
-        mock_get.side_effect = [repos_resp, commits_resp]
+        r = requests.get(f"https://api.github.com/users/{user}/repos", timeout=15)
+        if r.status_code == 403:
+            self.skipTest("Rate limited by GitHub (403) during pre-check.")
+        if r.status_code != 200:
+            self.skipTest(f"GitHub not reachable / unexpected status: {r.status_code}")
 
-        out = get_repos_and_commits("testuser")
-        self.assertEqual(out, [("RepoA", 0)])
+        repos = json.loads(r.text)
+        if isinstance(repos, list) and len(repos) > 25:
+            self.skipTest("Too many repos for unauthenticated CI testing; skipping to avoid rate limit.")
+
+        lines = get_repo_commit_counts(user)
+
+        self.assertIsInstance(lines, list)
+        self.assertGreaterEqual(len(lines), 1)
+
+        pattern = re.compile(r"^Repo: .+ Number of commits: \d+$")
+        for line in lines:
+            self.assertRegex(line, pattern)
 
 
 if __name__ == "__main__":
