@@ -25,3 +25,13 @@ def get_repos_and_commits(user_id):
         results.append((repo_name, num_commits))
 
     return results
+
+def print_repos_and_commits(user_id):
+    results = get_repos_and_commits(user_id)
+    for repo_name, num_commits in results:
+        print(f"Repo: {repo_name} Number of commits: {num_commits}")
+
+if __name__ == "__main__":
+    user = input("Enter GitHub user ID: ").strip()
+    print_repos_and_commits(user)
+
