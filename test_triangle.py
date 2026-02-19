@@ -1,5 +1,7 @@
-# test_triangle.py
+"""Unit tests for triangle.py (pytest-style file)."""
+# pylint: disable=missing-class-docstring,missing-function-docstring
 import unittest
+# ...rest of your imports/tests
 import math
 from triangle import classify_triangle
 
