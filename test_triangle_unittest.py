@@ -1,3 +1,4 @@
+"""Unittest-based tests for triangle.py (triangle classifier)."""
 import unittest
 import math
 from triangle import classify_triangle
