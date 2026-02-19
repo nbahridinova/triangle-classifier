@@ -31,12 +31,3 @@ def classify_triangle(a, b, c):
     # right check
     right = isclose(x*x + y*y, z*z, rel_tol=1e-9, abs_tol=1e-9)
     return f"{kind}{' Right' if right else ''}"
-if __name__ == "__main__":
-    samples = [
-        (3, 3, 3),
-        (3, 4, 5),
-        (5, 5, 8),
-        (1, 2, 3),
-    ]
-    for side_a, side_b, side_c in samples:
-        print(f"{(side_a, side_b, side_c)} -> {classify_triangle(side_a, side_b, side_c)}")
