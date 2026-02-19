@@ -24,13 +24,10 @@ def get_repo_commit_counts(user_id: str) -> list:
         "Accept": "application/vnd.github+json",
     }
 
-    # Optional: if you set a token in your environment, rate limits improve.
-    # Not required by assignment (no keys needed), but harmless if present.
     token = os.getenv("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = f"token {token}"
 
-    # 1) Get list of repos for the user
     repos_url = f"https://api.github.com/users/{user_id}/repos"
     try:
         repos_resp = requests.get(repos_url, headers=headers, timeout=15)
@@ -55,7 +52,6 @@ def get_repo_commit_counts(user_id: str) -> list:
 
     output_lines = []
 
-    # 2) For each repo, count commits by counting returned JSON elements
     for repo_obj in repos_data:
         repo_name = repo_obj.get("name")
         if not repo_name:
