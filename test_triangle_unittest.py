@@ -1,4 +1,5 @@
-"""Unittest-based tests for triangle.py (triangle classifier)."""
+"""Unit tests for triangle.py (unittest file)."""
+# pylint: disable=missing-class-docstring,missing-function-docstring,duplicate-code
 import unittest
 import math
 from triangle import classify_triangle
@@ -26,4 +27,4 @@ class TestTriangle(unittest.TestCase):
         self.assertEqual(classify_triangle(1, 2, 3), "NotATriangle")
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()
