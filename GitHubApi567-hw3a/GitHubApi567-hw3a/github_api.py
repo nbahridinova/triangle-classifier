@@ -1,37 +1,71 @@
+import os
 import requests
 import json
 
-def get_repos_and_commits(user_id):
+
+class GitHubAPIError(Exception):
+    """Raised when a GitHub API call fails (404, 403 rate limit, etc.)."""
+    pass
+
+
+def get_repo_commit_counts(user_id: str) -> list:
+    """
+    Input: GitHub user ID (string)
+    Output: list of strings in the format:
+        "Repo: <repo_name> Number of commits: <count>"
+    """
+    if user_id is None or str(user_id).strip() == "":
+        raise ValueError("GitHub user ID must be a non-empty string.")
+
+    user_id = str(user_id).strip()
+
+    headers = {
+        "User-Agent": "HW4a-GitHubAPI",
+        "Accept": "application/vnd.github+json",
+    }
+
+    # Optional: if you set a token in your environment, rate limits improve.
+    # Not required by assignment (no keys needed), but harmless if present.
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"token {token}"
+
+    # 1) Get list of repos for the user
     repos_url = f"https://api.github.com/users/{user_id}/repos"
-    repos_response = requests.get(repos_url, timeout=10)
+    try:
+        repos_resp = requests.get(repos_url, headers=headers, timeout=15)
+    except requests.RequestException as e:
+        raise GitHubAPIError(f"Network error contacting GitHub: {e}")
 
-    if repos_response.status_code != 200:
-        raise ValueError(f"Could not fetch the repos for user '{user_id}'")
+    if repos_resp.status_code == 404:
+        raise GitHubAPIError(f"User '{user_id}' not found (404).")
+    if repos_resp.status_code == 403:
+        remaining = repos_resp.headers.get("X-RateLimit-Remaining", "?")
+        raise GitHubAPIError(f"Rate limit hit (403). Remaining={remaining}")
+    if repos_resp.status_code != 200:
+        raise GitHubAPIError(f"GitHub error: {repos_resp.status_code} {repos_resp.text[:200]}")
 
-    repos = json.loads(repos_response.text)
+    try:
+        repos_data = json.loads(repos_resp.text)
+    except json.JSONDecodeError:
+        raise GitHubAPIError("Could not parse JSON from repos response.")
 
-    results = []
-    for repo in repos:
-        repo_name = repo["name"]
+    if not isinstance(repos_data, list):
+        raise GitHubAPIError("Unexpected repos response format (expected a list).")
+
+    output_lines = []
+
+    # 2) For each repo, count commits by counting returned JSON elements
+    for repo_obj in repos_data:
+        repo_name = repo_obj.get("name")
+        if not repo_name:
+            continue
+
         commits_url = f"https://api.github.com/repos/{user_id}/{repo_name}/commits"
-        commits_response = requests.get(commits_url, timeout=10)
+        try:
+            commits_resp = requests.get(commits_url, headers=headers, timeout=15)
+        except requests.RequestException as e:
+            raise GitHubAPIError(f"Network error contacting GitHub: {e}")
 
-        if commits_response.status_code != 200:
-            num_commits = 0
-        else:
-            commits = json.loads(commits_response.text)
-            num_commits = len(commits)
-
-        results.append((repo_name, num_commits))
-
-    return results
-
-def print_repos_and_commits(user_id):
-    results = get_repos_and_commits(user_id)
-    for repo_name, num_commits in results:
-        print(f"Repo: {repo_name} Number of commits: {num_commits}")
-
-if __name__ == "__main__":
-    user = input("Enter GitHub user ID: ").strip()
-    print_repos_and_commits(user)
-
+        if commits_resp.status_code == 403:
+            remaining = commits_resp.headers.get("X-RateLimit-Remaini_
