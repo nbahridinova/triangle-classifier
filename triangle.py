@@ -1,4 +1,4 @@
-# triangle.py
+"""Triangle classifier: classifies a triangle based on three side lengths."""
 from math import isclose
 
 def classify_triangle(a, b, c):
@@ -38,5 +38,5 @@ if __name__ == "__main__":
         (5, 5, 8),
         (1, 2, 3),
     ]
-    for a, b, c in samples:
-        print(f"{a, b, c} -> {classify_triangle(a, b, c)}")
+    for side_a, side_b, side_c in samples:
+        print(f"{(side_a, side_b, side_c)} -> {classify_triangle(side_a, side_b, side_c)}")
