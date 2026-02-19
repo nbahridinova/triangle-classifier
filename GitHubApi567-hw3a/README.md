@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/nbahridinova/triangle-classifier.svg?branch=main)](https://app.travis-ci.com/github/nbahridinova/triangle-classifier)
+[![Build Status](https://app.travis-ci.com/nbahridinova/triangle-classifier.svg?branch=hw3b_mocking)](https://app.travis-ci.com/github/nbahridinova/triangle-classifier)
 
 HW3a - Develop with Testing in Mind 
 
