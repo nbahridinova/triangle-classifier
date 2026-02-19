@@ -9,11 +9,7 @@ class GitHubAPIError(Exception):
 
 
 def get_repo_commit_counts(user_id: str) -> list:
-    """
-    Input: GitHub user ID (string)
-    Output: list of strings in the format:
-        "Repo: <repo_name> Number of commits: <count>"
-    """
+
     if user_id is None or str(user_id).strip() == "":
         raise ValueError("GitHub user ID must be a non-empty string.")
 
@@ -64,4 +60,36 @@ def get_repo_commit_counts(user_id: str) -> list:
             raise GitHubAPIError(f"Network error contacting GitHub: {e}")
 
         if commits_resp.status_code == 403:
-            remaining = commits_resp.headers.get("X-RateLimit-Remaini_
+            remaining = commits_resp.headers.get("X-RateLimit-Remaining", "?")
+            raise GitHubAPIError(f"Rate limit hit (403). Remaining={remaining}")
+        if commits_resp.status_code == 404:
+            continue
+        if commits_resp.status_code != 200:
+            raise GitHubAPIError(f"GitHub error: {commits_resp.status_code} {commits_resp.text[:200]}")
+
+        try:
+            commits_data = json.loads(commits_resp.text)
+        except json.JSONDecodeError:
+            raise GitHubAPIError(f"Could not parse JSON from commits response for repo '{repo_name}'.")
+
+        if not isinstance(commits_data, list):
+            raise GitHubAPIError(f"Unexpected commits response format for repo '{repo_name}' (expected a list).")
+
+        commit_count = len(commits_data)
+        output_lines.append(f"Repo: {repo_name} Number of commits: {commit_count}")
+
+    return output_lines
+
+
+if __name__ == "__main__":
+    
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: python github_api.py <github_user_id>")
+        raise SystemExit(2)
+
+    uid = sys.argv[1]
+    lines = get_repo_commit_counts(uid)
+    for line in lines:
+        print(line)
